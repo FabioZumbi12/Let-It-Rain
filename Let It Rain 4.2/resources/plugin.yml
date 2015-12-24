@@ -1,7 +1,7 @@
 name: LetItRain
 main: me.legault.LetItRain.LetItRain
-version: 4.3.2
-
+version: 4.4.1
+softdepend: [RedProtect]
 commands:
    zeus:
       description: Generates a lightning bolt on the pointer
@@ -40,7 +40,7 @@ commands:
       default: op
       permission: LetItRain.slaughter
    letitrain:
-      description: displays helps
+      description: displays helps and reload
       usage: /<command>
 permissions:
     LetItRain.*:
@@ -50,7 +50,9 @@ permissions:
             LetItRain.rain.coordinates: false
             LetItRain.firerain: true
             LetItRain.zeus: true
+            LetItRain.zeus.bypass: true
             LetItRain.strike: true
             LetItRain.launcher: true
             LetItRain.slaughter: true
             LetItRain.removeItems: true
+            LetItRain.reload: true

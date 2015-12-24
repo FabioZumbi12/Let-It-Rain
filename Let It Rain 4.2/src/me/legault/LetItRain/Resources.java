@@ -37,12 +37,12 @@ public class Resources {
 	}
 	
 	public static void broadcast(String msg){
-		LetItRain.server.broadcastMessage(msgColor + msg);
+		LetItRain.server.broadcastMessage(msgColor + ChatColor.translateAlternateColorCodes('&', msg));
 	}
 	
 	public static void privateMsg(CommandSender sender, String msg){
 		if (sender != null){
-			sender.sendMessage(msgColor + msg);				
+			sender.sendMessage(msgColor + ChatColor.translateAlternateColorCodes('&', msg));				
 		}
 				
 	}

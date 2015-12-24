@@ -24,6 +24,7 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.logging.Logger;
 
+import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.Server;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -46,9 +47,9 @@ public class LetItRain extends JavaPlugin{
 	public static List<Coordinate> coordinates;
 	
 	//Defaults
-	public static int dAmount, maxAmount, maxRadius, dRadius, dLightningPower;
-	public static boolean dRemoveArtifact, isToBeUpdated, destructiveArrows, checkForUpdate, rainBlocks, rainPotions, rainLava, rainWater, dispenserWorksWithFireSnowballs;
-	public static String dPunishMsg, dZeusMsg, dGrenadeMsg, dRainMsg, dFirerainMsg;
+	public static int Zeusdelay, dAmount, maxAmount, maxRadius, dRadius, dLightningPower;
+	public static boolean usingZeus, RedProtect, dRemoveArtifact, isToBeUpdated, destructiveArrows, checkForUpdate, rainBlocks, rainPotions, rainLava, rainWater, dispenserWorksWithFireSnowballs;
+	public static String ZeusWait, dPunishMsg, dZeusMsg, dGrenadeMsg, dRainMsg, dFirerainMsg;
 	public static int item, itemZeus;
 	public static String newVersion;
 	private Rain rainExec;
@@ -82,6 +83,9 @@ public class LetItRain extends JavaPlugin{
 		defaultBlackList.add(EntityType.MAGMA_CUBE);
 		defaultBlackList.add(EntityType.BAT);
 		defaultBlackList.add(EntityType.ENDER_SIGNAL);
+		
+		//check RedProtect
+		checkRP();
 		
 		extractCoordinates();
 		createConfig();
@@ -142,7 +146,7 @@ public class LetItRain extends JavaPlugin{
 		log.info(Resources.getPluginTitle() + " enabled");
 		
 	}
-	
+	    
 	public void onDisable(){
 		log.info(Resources.getPluginTitle() + " disabled");
 	}
@@ -195,10 +199,26 @@ public class LetItRain extends JavaPlugin{
 		}
 	}
 	
-	@SuppressWarnings("deprecation")
-	private void createConfig(){		
+	public static void reloadCfg(){		
+		try{
+			
+			File confRain = new File("plugins" + File.separator + "LetItRain" + File.separator + "config.yml");
+			config.load(confRain);
+			AddProperties(config);			
+			config.save(confRain);	
+			
+		}catch(Exception e){
+			e.printStackTrace();
+			log.severe("An error has been detected with the config file. Default values will be loaded");
+		}finally{
+			plugin.saveConfig();
+		}
+	}
+	
+	public static void createConfig(){		
 		//Defaults
 		dLightningPower = 15;
+		ZeusWait = "&cWait to use the Lightning again";
 		dZeusMsg = "[player] shall bring peace";
 		dGrenadeMsg = "Feel the power of [player]";
 		dPunishMsg = "May the Gods punish [player] for his incompetence ";
@@ -211,73 +231,81 @@ public class LetItRain extends JavaPlugin{
 		maxRadius = 200;
 		
 		try{
-			config = getConfig();
+			config = plugin.getConfig();
 			File confRain = new File("plugins" + File.separator + "LetItRain" + File.separator + "config.yml");
+			AddProperties(config);
+			config.save(confRain);	
 
-			config.options().header(
-					"Let It Rain plugin \n\n" +
-					"Maty241, Bathlamos\n" +
-					"Version " + plugin.getDescription().getVersion() + "\n\n\n" +
-					"http://mathieu.legault.me/\n" +
-					"http://bathlamos.me/\n" + 
-					"http://areaz12server.net.br/\n");
-			
-			checkForUpdate = conf("LetItRain.Check for updates", true);
-			dLightningPower = conf("LetItRain.Zeus.Lightning explosion power", dLightningPower);
-			dZeusMsg = conf("LetItRain.Zeus.Message", dZeusMsg);
-			dGrenadeMsg = conf("LetItRain.Grenade Launcher.Message", dGrenadeMsg);
-			dPunishMsg = conf("LetItRain.Punish.Message", dPunishMsg);
-			
-			dispenserWorksWithFireSnowballs = conf("LetItRain.Rain.Dispensers can shoot explosive snowballs", true);
-			maxAmount = conf("LetItRain.Rain.Maximum amount", maxAmount);
-			maxRadius = conf("LetItRain.Rain.Maximum radius", maxRadius);
-			dRemoveArtifact = !conf("LetItRain.Rain.Drops from corpses", dRemoveArtifact);//Note: the nots are important. Don't delete
-			dRainMsg = conf("LetItRain.Rain.Rain Message", dRainMsg);
-			dFirerainMsg = conf("LetItRain.Rain.Firerain message", dFirerainMsg);
-			destructiveArrows = conf("LetItRain.Rain.Deep impact arrows", true);
-			itemZeus = conf("LetItRain.Zeus.Launcher id", 369);
-			item = conf("LetItRain.Grenade Launcher.Launcher id", 377);
-			dAmount = conf("LetItRain.Rain.Default amount", 500);
-			dRadius = conf("LetItRain.Rain.Default radius", 30);
-			rainBlocks = !conf("LetItRain.Rain.Blacklist.Block", false); //Note: the nots are important. Don't delete
-			rainPotions = !conf("LetItRain.Rain.Blacklist.Potion", false);//Note: the nots are important. Don't delete
-			rainLava = conf("LetItRain.Rain.Blacklist.Lava", false);
-			rainWater = conf("LetItRain.Rain.Blacklist.Water", false);			
-			item = config.getInt("LetItRain.Grenade Launcher.Launcher id");
-			
-			Material.getMaterial(item);
-			if (Material.getMaterial(item) == null || item <= 0){
-				log.severe("Invalid item in plugin.yml (<Grenade Launcher.Launcher id>)");
-				item = 377;
-			}
-			
-			itemZeus = config.getInt("LetItRain.Zeus.Launcher id");
-			
-			Material.getMaterial(itemZeus);
-			if (Material.getMaterial(itemZeus) == null || itemZeus <= 0){
-				log.severe("Invalid item in plugin.yml (<Zeus.Launcher id>)");
-				itemZeus = 369;
-			}
-			
-			//Put the entities in alphabetical order
-			Map<String, Boolean> entityNames = new HashMap<String, Boolean>();
-			for(EntityType e: EntityType.values()){
-				if (e.isSpawnable() && !config.contains("LetItRain.Rain.Blacklist." + e.getEntityClass().getSimpleName()))
-					entityNames.put(e.getEntityClass().getSimpleName(), defaultBlackList.contains(e));
-			}
-			SortedSet<String> keys = new TreeSet<String>(entityNames.keySet());
-			for(String key: keys){
-				Boolean isBlacklisted = entityNames.get(key);
-				config.set("LetItRain.Rain.Blacklist." + key, isBlacklisted);
-			}
-			
-			config.save(confRain);				
+						
 		}catch(Exception e){
 			e.printStackTrace();
 			log.severe("An error has been detected with the config file. Default values will be loaded");
 		}finally{
-			saveConfig();
+			plugin.saveConfig();
 		}
+	}
+	
+	@SuppressWarnings("deprecation")
+	private static void AddProperties(FileConfiguration config){
+		config.options().header(
+				"Let It Rain plugin \n\n" +
+				"Maty241, Bathlamos\n" +
+				"Version " + plugin.getDescription().getVersion() + "\n\n\n" +
+				"http://mathieu.legault.me/\n" +
+				"http://bathlamos.me/\n" + 
+				"http://areaz12server.net.br/\n");
+		
+		usingZeus = conf("LetItRain.Zeus.Show Player Using Zeus", true);
+		Zeusdelay = conf("LetItRain.Zeus.Delay", 5);
+		ZeusWait = conf("LetItRain.Zeus.Delay Message", ZeusWait);
+		checkForUpdate = conf("LetItRain.Check for updates", true);
+		dLightningPower = conf("LetItRain.Zeus.Lightning explosion power", dLightningPower);
+		dZeusMsg = conf("LetItRain.Zeus.Message", dZeusMsg);
+		dGrenadeMsg = conf("LetItRain.Grenade Launcher.Message", dGrenadeMsg);
+		dPunishMsg = conf("LetItRain.Punish.Message", dPunishMsg);
+		
+		dispenserWorksWithFireSnowballs = conf("LetItRain.Rain.Dispensers can shoot explosive snowballs", true);
+		maxAmount = conf("LetItRain.Rain.Maximum amount", maxAmount);
+		maxRadius = conf("LetItRain.Rain.Maximum radius", maxRadius);
+		dRemoveArtifact = !conf("LetItRain.Rain.Drops from corpses", dRemoveArtifact);//Note: the nots are important. Don't delete
+		dRainMsg = conf("LetItRain.Rain.Rain Message", dRainMsg);
+		dFirerainMsg = conf("LetItRain.Rain.Firerain message", dFirerainMsg);
+		destructiveArrows = conf("LetItRain.Rain.Deep impact arrows", true);
+		itemZeus = conf("LetItRain.Zeus.Launcher id", 369);
+		item = conf("LetItRain.Grenade Launcher.Launcher id", 377);
+		dAmount = conf("LetItRain.Rain.Default amount", 500);
+		dRadius = conf("LetItRain.Rain.Default radius", 30);
+		rainBlocks = !conf("LetItRain.Rain.Blacklist.Block", false); //Note: the nots are important. Don't delete
+		rainPotions = !conf("LetItRain.Rain.Blacklist.Potion", false);//Note: the nots are important. Don't delete
+		rainLava = conf("LetItRain.Rain.Blacklist.Lava", false);
+		rainWater = conf("LetItRain.Rain.Blacklist.Water", false);			
+		item = config.getInt("LetItRain.Grenade Launcher.Launcher id");
+		
+		Material.getMaterial(item);
+		if (Material.getMaterial(item) == null || item <= 0){
+			log.severe("Invalid item in plugin.yml (<Grenade Launcher.Launcher id>)");
+			item = 377;
+		}
+		
+		itemZeus = config.getInt("LetItRain.Zeus.Launcher id");
+		
+		Material.getMaterial(itemZeus);
+		if (Material.getMaterial(itemZeus) == null || itemZeus <= 0){
+			log.severe("Invalid item in plugin.yml (<Zeus.Launcher id>)");
+			itemZeus = 369;
+		}
+		
+		//Put the entities in alphabetical order
+		Map<String, Boolean> entityNames = new HashMap<String, Boolean>();
+		for(EntityType e: EntityType.values()){
+			if (e.isSpawnable() && !config.contains("LetItRain.Rain.Blacklist." + e.getEntityClass().getSimpleName()))
+				entityNames.put(e.getEntityClass().getSimpleName(), defaultBlackList.contains(e));
+		}
+		SortedSet<String> keys = new TreeSet<String>(entityNames.keySet());
+		for(String key: keys){
+			Boolean isBlacklisted = entityNames.get(key);
+			config.set("LetItRain.Rain.Blacklist." + key, isBlacklisted);
+		}	
 	}
 	
 	private static String conf(String identifier, String value){
@@ -304,4 +332,9 @@ public class LetItRain extends JavaPlugin{
 			return config.getInt(identifier);
 	}
 	
+	//check if plugin Redprotect is installed
+    private void checkRP() {
+    	Plugin p = Bukkit.getPluginManager().getPlugin("RedProtect");    	
+		RedProtect =  p != null && p.isEnabled();
+	}
 }

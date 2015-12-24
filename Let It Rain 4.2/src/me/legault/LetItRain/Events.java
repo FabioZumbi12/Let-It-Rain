@@ -1,11 +1,14 @@
 package me.legault.LetItRain;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Random;
 
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
@@ -27,9 +30,14 @@ import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.material.Dispenser;
 import org.bukkit.util.Vector;
 
-public class Events implements Listener{
+import br.net.fabiozumbi12.RedProtect.RPLang;
+import br.net.fabiozumbi12.RedProtect.RedProtect;
+import br.net.fabiozumbi12.RedProtect.Region;
+
+public class Events implements Listener{	
 	
-	private static java.util.List<BlockFace> faces = Arrays.asList(new BlockFace[] {
+	private static List<Player> waitP = new ArrayList<Player>();	
+	private static List<BlockFace> faces = Arrays.asList(new BlockFace[] {
             BlockFace.NORTH, BlockFace.EAST, BlockFace.SOUTH, BlockFace.WEST, BlockFace.UP, BlockFace.DOWN, BlockFace.SELF
         });
 	
@@ -105,17 +113,55 @@ public class Events implements Listener{
 			snow.setFireTicks(1000);
 			snows.add(snow);
 			
-		}else if(event.getPlayer().getItemInHand().getTypeId() == LetItRain.itemZeus && event.getPlayer().hasPermission("LetItRain.zeus")){
-			
+		} else if(event.getPlayer().getItemInHand().getTypeId() == LetItRain.itemZeus && event.getPlayer().hasPermission("LetItRain.zeus")){
 			Player player = event.getPlayer();
-			Location location = player.getTargetBlock((HashSet<Byte>)null, 800).getLocation();  
-			 
-			World world = player.getWorld();
-			world.createExplosion(location, LetItRain.dLightningPower);
-			world.strikeLightning(location);
+			Location location = player.getTargetBlock((HashSet<Byte>)null, 800).getLocation();
 			
+			if (LetItRain.RedProtect){
+				Region reg1 = RedProtect.rm.getTopRegion(location);
+				if (reg1 != null){
+					if (reg1.canBuild(player) || reg1.canFire()){
+						strikeWait(player, location);
+					} else {
+						RPLang.sendMessage(player, "playerlistener.region.cantuse");
+					}
+					return;
+				}				
+			}
+			
+			strikeWait(player, location);
 		}
     }
+	
+	private static void StrikeRain(Player player, Location location){		
+		World world = player.getWorld();
+		world.createExplosion(location, LetItRain.dLightningPower);
+		world.strikeLightning(location);
+		if (LetItRain.usingZeus){
+			LetItRain.plugin.getServer().getConsoleSender().sendMessage("Using Lightning: "+player.getName());
+		}
+	}
+	
+	private static void strikeWait(final Player player, final Location location){
+		if (player.hasPermission("LetItRain.zeus.bypass")){
+			StrikeRain(player, location);	
+			return;
+		}
+		if (!waitP.contains(player)){
+			StrikeRain(player, location);
+			waitP.add(player);
+    		Bukkit.getScheduler().scheduleSyncDelayedTask(LetItRain.plugin, new Runnable(){
+    			@Override
+    			public void run() {    					
+    				if (waitP.contains(player)){
+    					waitP.remove(player);
+    				}
+    			}    		
+        	}, LetItRain.Zeusdelay*20);
+    	} else {
+    		Resources.privateMsg(player, LetItRain.ZeusWait);
+    	}
+	}
 	
 	@EventHandler
 	public void dispenser(BlockDispenseEvent event){

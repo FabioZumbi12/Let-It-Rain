@@ -199,7 +199,7 @@ public class Rain implements CommandExecutor{
 		final EntityType fObj = obj;
 		final boolean fIsOnFire = isOnFire;
 				
-		if((!LetItRain.rainLava && mat.name().equals("LAVA")) || (!LetItRain.rainWater && mat.name().equals("WATER"))){
+		if(mat != null && (!LetItRain.rainLava && mat.name().equals("LAVA")) || (!LetItRain.rainWater && mat.name().equals("WATER"))){
 			World w = targetLocation.getWorld();
 			if(recognizedParams == 1)
 				radius = amount;

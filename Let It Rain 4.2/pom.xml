@@ -3,7 +3,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>me.legault</groupId>
 	<artifactId>let-it-rain</artifactId>
-	<version>4.3</version>
+	<version>4.4</version>
 	<name>LetItRain</name>
 	<description>Bukkit plugin to unleash rain of entities and items</description>
 	<build>
@@ -41,6 +41,13 @@
        <groupId>org.spigotmc</groupId>
        <artifactId>spigot-api</artifactId>
        <version>1.8.8-R0.1-SNAPSHOT</version>
+    </dependency>
+    <dependency>
+       <groupId>RedProtect</groupId>
+       <artifactId>Bukkit</artifactId>
+	   <version>v1</version>
+       <scope>system</scope>
+       <systemPath>D:/ProjetosBukkit/APIs/RedProtect.jar</systemPath>
     </dependency> 
         <!-- bukkit 
         <dependency>
