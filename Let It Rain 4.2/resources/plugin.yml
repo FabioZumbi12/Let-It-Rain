@@ -1,6 +1,6 @@
 name: LetItRain
 main: me.legault.LetItRain.LetItRain
-version: 4.4.1
+version: 4.5.0
 softdepend: [RedProtect]
 commands:
    zeus:
@@ -47,6 +47,7 @@ permissions:
         description: Gives access to all LetItRain commands
         children:
             LetItRain.rain: true
+            LetItRain.rain.lightning: true
             LetItRain.rain.coordinates: false
             LetItRain.firerain: true
             LetItRain.zeus: true

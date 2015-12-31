@@ -47,9 +47,9 @@ public class LetItRain extends JavaPlugin{
 	public static List<Coordinate> coordinates;
 	
 	//Defaults
-	public static int Zeusdelay, dAmount, maxAmount, maxRadius, dRadius, dLightningPower;
+	public static int defLightAmount, Zeusdelay, dAmount, maxAmount, maxRadius, dRadius, dLightningPower;
 	public static boolean usingZeus, RedProtect, dRemoveArtifact, isToBeUpdated, destructiveArrows, checkForUpdate, rainBlocks, rainPotions, rainLava, rainWater, dispenserWorksWithFireSnowballs;
-	public static String ZeusWait, dPunishMsg, dZeusMsg, dGrenadeMsg, dRainMsg, dFirerainMsg;
+	public static String rainLightnings, ZeusWait, dPunishMsg, dZeusMsg, dGrenadeMsg, dRainMsg, dFirerainMsg;
 	public static int item, itemZeus;
 	public static String newVersion;
 	private Rain rainExec;
@@ -226,9 +226,11 @@ public class LetItRain extends JavaPlugin{
 		dRemoveArtifact = true;
 		dRainMsg = "May [entity] rain upon [player] ";
 		dFirerainMsg = "May burning [entity] rain upon [player] ";
+		rainLightnings = "The power of Zeus is with [player]";
 		dAmount = 500;
 		dRadius = 30;
 		maxRadius = 200;
+		defLightAmount = 10;
 		
 		try{
 			config = plugin.getConfig();
@@ -265,8 +267,10 @@ public class LetItRain extends JavaPlugin{
 		dPunishMsg = conf("LetItRain.Punish.Message", dPunishMsg);
 		
 		dispenserWorksWithFireSnowballs = conf("LetItRain.Rain.Dispensers can shoot explosive snowballs", true);
+		rainLightnings = conf("LetItRain.Rain.Raining Lightnings", rainLightnings);
 		maxAmount = conf("LetItRain.Rain.Maximum amount", maxAmount);
 		maxRadius = conf("LetItRain.Rain.Maximum radius", maxRadius);
+		defLightAmount = conf("LetItRain.Rain.Default Lightning amount", defLightAmount);
 		dRemoveArtifact = !conf("LetItRain.Rain.Drops from corpses", dRemoveArtifact);//Note: the nots are important. Don't delete
 		dRainMsg = conf("LetItRain.Rain.Rain Message", dRainMsg);
 		dFirerainMsg = conf("LetItRain.Rain.Firerain message", dFirerainMsg);

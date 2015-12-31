@@ -28,7 +28,7 @@ import org.bukkit.util.Vector;
 public class Rain implements CommandExecutor{
 	
 	public static HashMap<Entity, Boolean> thrownedItems = new HashMap<Entity, Boolean>();
-	public static HashMap<Integer, Integer> runningTasks = new HashMap<Integer, Integer>();
+	public static HashMap<Integer, Integer> runningTasks = new HashMap<Integer, Integer>();	
 	
 	public boolean onCommand(final CommandSender sender, Command cmd, String label,  String[] args){
 		boolean isAmountInit = false;
@@ -40,6 +40,8 @@ public class Rain implements CommandExecutor{
 		EntityType obj = null;
 		PotionType potion = null;
 		Material mat = null;
+		int matID = 0;
+		boolean isLightning = false;
 		
 		//Permissions
 		if (!sender.hasPermission("LetItRain.rain"))
@@ -68,16 +70,29 @@ public class Rain implements CommandExecutor{
 				potion = findPotion(args[0].substring("potions:".length()));
 		}
 		
-		if (potion == null && LetItRain.rainBlocks)
+		if (potion == null && LetItRain.rainBlocks){
 			mat = findMaterial(args[0]);
+			if (args[0].contains(":")){
+				mat = findMaterial(args[0].split(":")[0]);
+				matID = Integer.parseInt(args[0].split(":")[1]);
+			}			
+		}		
 		
-		if (obj == null && mat == null && potion == null){
+		if (args[0].equalsIgnoreCase("lightning") || args[0].equalsIgnoreCase("zeus")){
+			if (!sender.hasPermission("LetItRain.rain.lightning")){
+				return true;
+			}
+			isLightning = true;
+			amount = LetItRain.defLightAmount;
+		}
+		
+		if (obj == null && mat == null && potion == null && !isLightning){
 			Resources.privateMsg(sender, "Please enter a valid entity/material id or name");
 			if (!LetItRain.rainBlocks)
 				Resources.privateMsg(sender, "Blocks have been disabled ");
 			return true;
 		}
-		
+				
 		//Parse remaining arguments
 		int recognizedParams = 0;
 		for (int i = 1; i < args.length; i++){
@@ -187,8 +202,8 @@ public class Rain implements CommandExecutor{
 				Resources.privateMsg(sender, "An unknow exception has occured with your config file. Please try again.");
 				return true;
 			}
-		}
-		
+		}		
+				
 		final long initTime = System.currentTimeMillis();
 		Random rdm = new Random();
 		final int myTaskIdentifier = rdm.nextInt();
@@ -198,6 +213,9 @@ public class Rain implements CommandExecutor{
 		final int fRadius = radius, fAmount = amount;
 		final EntityType fObj = obj;
 		final boolean fIsOnFire = isOnFire;
+		final int fmatID = matID;
+		final boolean fisLightning = isLightning;
+		
 				
 		if(mat != null && (!LetItRain.rainLava && mat.name().equals("LAVA")) || (!LetItRain.rainWater && mat.name().equals("WATER"))){
 			World w = targetLocation.getWorld();
@@ -213,15 +231,33 @@ public class Rain implements CommandExecutor{
 
 				@Override
 				public void run() {
-					if(!spawnEntities(fLocation, fObj, sender, fMat, fPotion, (int)(Math.max(0.125 * Math.pow(fRadius,  2), 100)), fRadius, fIsOnFire) || 
+					if(!spawnEntities(fLocation, fObj, sender, fMat, fmatID, fPotion, (int)(Math.max(0.125 * Math.pow(fRadius,  2), 100)), fRadius, fIsOnFire, fisLightning) || 
 							System.currentTimeMillis() - initTime > Math.max(fAmount * 1000 - 7000, 1000))
 						StopScheduler(myTaskIdentifier);
 				}
 				
 			}, 0L,  20); // There are 20 server ticks per second
 			runningTasks.put(myTaskIdentifier, id);
+		}else if(isLightning){
+			int id = LetItRain.server.getScheduler().scheduleSyncRepeatingTask(LetItRain.plugin, new Runnable(){
+
+				@Override
+				public void run() {
+					spawnEntities(fLocation, fObj, sender, fMat, fmatID, fPotion, fAmount, fRadius, fIsOnFire, fisLightning);					
+				}				
+			}, 0L,  10); // 2 lightnings in 1 second
+			runningTasks.put(myTaskIdentifier, id);
+			
+			//stop after x amount of lightnings
+			LetItRain.server.getScheduler().scheduleSyncDelayedTask(LetItRain.plugin, new Runnable(){
+				@Override
+				public void run() {
+					StopScheduler(myTaskIdentifier);
+				}				
+			}, (10*fAmount));
+			
 		}else{
-			boolean res = spawnEntities(targetLocation, obj, sender, mat, potion, amount, radius, fIsOnFire);
+			boolean res = spawnEntities(targetLocation, obj, sender, mat, matID, potion, amount, radius, fIsOnFire, isLightning);
 			if(!res)
 				return true;
 		}
@@ -232,6 +268,8 @@ public class Rain implements CommandExecutor{
 			name = obj.getEntityClass().getSimpleName();
 		else if(potion != null)
 			name = potion.name() + " potion";
+		else if(isLightning)
+			name = "Lightning";
 		else
 			name = mat.name();
 		
@@ -240,22 +278,39 @@ public class Rain implements CommandExecutor{
 		if(amount > 1)
 			name = toPlural(name);
 		
+		if(isLightning){
+			Resources.broadcast(LetItRain.rainLightnings.replace("[player]", targetName));
+			return true;
+		}
 		displayMsg(targetName, name, isOnFire);
 		
 		return true;
 	}
 	
-	private static boolean spawnEntities(Location location, EntityType obj, CommandSender sender, Material mat, 
-			PotionType potionType, int amount, int radius, boolean isOnFire){
+	private static boolean spawnEntities(Location location, EntityType obj, CommandSender sender, Material mat, int matID,
+			PotionType potionType, int amount, int radius, boolean isOnFire, boolean isLightning){
 		
 		Location newLoc;
 		Random rdm = new Random();
+		
+		
+		if (isLightning){
+			newLoc = location.clone();
+			newLoc.setX(location.getX()+(double)rdm.nextInt(radius*2)-(double)radius);	            
+			newLoc.setZ(location.getZ()+(double)rdm.nextInt(radius*2)-(double)radius);
+			
+			World world = location.getWorld();
+			newLoc = world.getHighestBlockAt(newLoc.clone()).getLocation();
+			world.createExplosion(newLoc, LetItRain.dLightningPower);
+			world.strikeLightning(newLoc);
+			return true;
+		}
 		
 		try{
 			//Spawn entity
 			for (int i = 0; i < amount; i++){
 				newLoc = location.clone();
-				newLoc.setX(location.getX()+(double)rdm.nextInt(radius*2)-(double)radius);
+				newLoc.setX(location.getX()+(double)rdm.nextInt(radius*2)-(double)radius);	
 				newLoc.setY(location.getY()+(double)rdm.nextInt(250)+100.0);
 				newLoc.setZ(location.getZ()+(double)rdm.nextInt(radius*2)-(double)radius);
 				
@@ -273,10 +328,16 @@ public class Rain implements CommandExecutor{
 						creature.setFireTicks(1000 + (int)rdm.nextFloat()*300);
 				}else{
 					ItemStack is;
-					if(potionType != null)
+					if(potionType != null){
 						is = new Potion(potionType).toItemStack(1);
-					else
-						is = new ItemStack(mat);
+					} else {
+						if (matID != 0){
+							is = new ItemStack(mat, 1, (short)matID);	
+						} else {
+							is = new ItemStack(mat);
+						}											
+					}
+					
 					location.getWorld().dropItem(newLoc, is);
 					
 				}
