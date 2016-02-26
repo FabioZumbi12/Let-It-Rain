@@ -251,7 +251,7 @@ public class LetItRain extends JavaPlugin{
 	private static void AddProperties(FileConfiguration config){
 		config.options().header(
 				"Let It Rain plugin \n\n" +
-				"Maty241, Bathlamos\n" +
+				"Maty241, Bathlamos, FabioZumbi12\n" +
 				"Version " + plugin.getDescription().getVersion() + "\n\n\n" +
 				"http://mathieu.legault.me/\n" +
 				"http://bathlamos.me/\n" + 

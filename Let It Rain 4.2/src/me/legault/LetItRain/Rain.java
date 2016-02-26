@@ -217,7 +217,7 @@ public class Rain implements CommandExecutor{
 		final boolean fisLightning = isLightning;
 		
 				
-		if(mat != null && (!LetItRain.rainLava && mat.name().equals("LAVA")) || (!LetItRain.rainWater && mat.name().equals("WATER"))){
+		if(mat != null && ((!LetItRain.rainLava && mat.name().equals("LAVA")) || (!LetItRain.rainWater && mat.name().equals("WATER")))){
 			World w = targetLocation.getWorld();
 			if(recognizedParams == 1)
 				radius = amount;
