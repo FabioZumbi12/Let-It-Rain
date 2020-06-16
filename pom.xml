@@ -1,79 +1,79 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-	<modelVersion>4.0.0</modelVersion>
-	<groupId>me.legault</groupId>
-	<artifactId>let-it-rain</artifactId>
-	<version>4.5.4</version>
-	<name>LetItRain</name>
-	<description>Bukkit plugin to unleash rain of entities and items</description>
-	<build>
-    <finalName>${project.name}</finalName>
-    <defaultGoal>clean package install</defaultGoal>
-    <plugins>
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://maven.apache.org/POM/4.0.0"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>me.legault</groupId>
+    <artifactId>let-it-rain</artifactId>
+    <version>4.5.4</version>
+    <name>LetItRain</name>
+    <description>Bukkit plugin to unleash rain of entities and items</description>
+    <build>
+        <finalName>${project.name}</finalName>
+        <defaultGoal>clean package install</defaultGoal>
+        <plugins>
 
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-compiler-plugin</artifactId>
-        <version>3.1</version>
-        <configuration>
-          <source>1.8</source>
-          <target>1.8</target>
-        </configuration>        
-      </plugin>
-      
-      <plugin>  
-        <groupId>org.apache.maven.plugins</groupId>  
-        <artifactId>maven-resources-plugin</artifactId>  
-        <version>2.4.3</version>  
-        <executions>  
-         <execution>
-          <id>copy-resources</id>
-          <phase>validate</phase>
-          <goals>
-            <goal>copy-resources</goal>
-          </goals>
-          <configuration>          
-          <outputDirectory>${project.basedir}/release</outputDirectory>
-          <resources>
-            <resource>
-              <directory>target/</directory>
-              <includes>
-                <include>${build.finalName}.jar</include>
-              </includes>
-              <filtering>false</filtering>
-            </resource>
-          </resources>
-          </configuration>
-        </execution>
-      </executions>  
-     </plugin> 
-     
-    </plugins>
-  </build>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.1</version>
+                <configuration>
+                    <source>1.8</source>
+                    <target>1.8</target>
+                </configuration>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-resources-plugin</artifactId>
+                <version>2.4.3</version>
+                <executions>
+                    <execution>
+                        <id>copy-resources</id>
+                        <phase>validate</phase>
+                        <goals>
+                            <goal>copy-resources</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${project.basedir}/release</outputDirectory>
+                            <resources>
+                                <resource>
+                                    <directory>target/</directory>
+                                    <includes>
+                                        <include>${build.finalName}.jar</include>
+                                    </includes>
+                                    <filtering>false</filtering>
+                                </resource>
+                            </resources>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+        </plugins>
+    </build>
 
 
-	<repositories>
-		<!-- spigot -->
-		<repository>
+    <repositories>
+        <!-- spigot -->
+        <repository>
             <id>spigot-repo</id>
             <url>https://hub.spigotmc.org/nexus/content/groups/public/</url>
         </repository>
-	</repositories>
+    </repositories>
 
-   <dependencies>
-	<!--Spigot-API-->
-    <dependency>
-       <groupId>org.spigotmc</groupId>
-       <artifactId>spigot-api</artifactId>
-       <version>1.15.2-R0.1-SNAPSHOT</version>
-    </dependency>
-    <dependency>
-       <groupId>RedProtect</groupId>
-       <artifactId>Bukkit</artifactId>
-	   <version>v1</version>
-       <scope>system</scope>
-       <systemPath>D:/ProjetosBukkit/APIs/RedProtect-7.4.1.jar</systemPath>
-    </dependency> 
+    <dependencies>
+        <!--Spigot-API-->
+        <dependency>
+            <groupId>org.spigotmc</groupId>
+            <artifactId>spigot-api</artifactId>
+            <version>1.15.2-R0.1-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+            <groupId>RedProtect</groupId>
+            <artifactId>Bukkit</artifactId>
+            <version>v1</version>
+            <scope>system</scope>
+            <systemPath>D:/ProjetosBukkit/APIs/RedProtect-7.4.1.jar</systemPath>
+        </dependency>
     </dependencies>
-    
+
 </project>
