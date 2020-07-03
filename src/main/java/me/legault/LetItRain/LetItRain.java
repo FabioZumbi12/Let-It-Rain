@@ -6,6 +6,8 @@
 
 package me.legault.LetItRain;
 
+import me.legault.LetItRain.hooks.IProtectionHooks;
+import me.legault.LetItRain.hooks.RedProtectHook;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.Server;
@@ -41,12 +43,11 @@ public class LetItRain extends JavaPlugin {
     public static int version;
     public static List<EntityType> defaultBlackList;
     private static Logger log;
-    private Rain rainExec;
-    private Zeus zeusExec;
-    private Punish punishExec;
-    private Launcher launcherExec;
-    private RemoveItemsnSlaughter removeItems;
-    private LetItRainHelp lirh;
+    private static final List<IProtectionHooks> hooks = new ArrayList<>();
+
+    public static List<IProtectionHooks> getHooks() {
+        return hooks;
+    }
 
     public static void reloadCfg() {
         try {
@@ -96,7 +97,6 @@ public class LetItRain extends JavaPlugin {
         }
     }
 
-    @SuppressWarnings("deprecation")
     private static void AddProperties(FileConfiguration config) {
         config.options().header(
                 "Let It Rain plugin \n\n" +
@@ -149,7 +149,7 @@ public class LetItRain extends JavaPlugin {
             if (e.isSpawnable() && !config.contains("LetItRain.Rain.Blacklist." + e.getEntityClass().getSimpleName()))
                 entityNames.put(e.getEntityClass().getSimpleName(), defaultBlackList.contains(e));
         }
-        SortedSet<String> keys = new TreeSet<String>(entityNames.keySet());
+        SortedSet<String> keys = new TreeSet<>(entityNames.keySet());
         for (String key : keys) {
             Boolean isBlacklisted = entityNames.get(key);
             config.set("LetItRain.Rain.Blacklist." + key, isBlacklisted);
@@ -183,14 +183,12 @@ public class LetItRain extends JavaPlugin {
     public void onEnable() {
         plugin = this;
         log = this.getLogger();
-
         server = this.getServer();
 
         server.getPluginManager().registerEvents(new Events(), this);
-
         version = getBukkitVersion();
         //Sets blacklist
-        defaultBlackList = new ArrayList<EntityType>();
+        defaultBlackList = new ArrayList<>();
         for (EntityType ent : EntityType.values()) {
             if (!ent.isSpawnable()) {
                 continue;
@@ -198,30 +196,32 @@ public class LetItRain extends JavaPlugin {
             defaultBlackList.add(ent);
         }
 
-        //check RedProtect
-        checkRP();
+        //check hooks
+        if (checkRedProtect()) {
+            hooks.add(new RedProtectHook());
+        }
 
         extractCoordinates();
         createConfig();
 
-        rainExec = new Rain();
+        Rain rainExec = new Rain();
         getCommand("rain").setExecutor(rainExec);
         getCommand("firerain").setExecutor(rainExec);
 
-        zeusExec = new Zeus(this);
+        Zeus zeusExec = new Zeus(this);
         getCommand("zeus").setExecutor(zeusExec);
 
-        punishExec = new Punish(this);
+        Punish punishExec = new Punish(this);
         getCommand("strike").setExecutor(punishExec);
 
-        launcherExec = new Launcher(this);
+        Launcher launcherExec = new Launcher(this);
         getCommand("launcher").setExecutor(launcherExec);
 
-        removeItems = new RemoveItemsnSlaughter(this);
+        RemoveItemsnSlaughter removeItems = new RemoveItemsnSlaughter(this);
         getCommand("removeItems").setExecutor(removeItems);
         getCommand("slaughter").setExecutor(removeItems);
 
-        lirh = new LetItRainHelp(this);
+        LetItRainHelp lirh = new LetItRainHelp(this);
         getCommand("letitrain").setExecutor(lirh);
 
         //Checks for more recent version
@@ -321,8 +321,8 @@ public class LetItRain extends JavaPlugin {
     }
 
     //check if plugin Redprotect is installed
-    private void checkRP() {
+    private boolean checkRedProtect() {
         Plugin p = Bukkit.getPluginManager().getPlugin("RedProtect");
-        RedProtect = p != null && p.isEnabled();
+        return p != null && p.isEnabled();
     }
 }

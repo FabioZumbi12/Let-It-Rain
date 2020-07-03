@@ -1,6 +1,6 @@
 name: LetItRain
 main: me.legault.LetItRain.LetItRain
-version: 4.5.4
+version: 4.5.5
 api-version: 1.13
 softdepend: [RedProtect]
 commands:

@@ -2,7 +2,6 @@ package me.legault.LetItRain;
 
 import br.net.fabiozumbi12.RedProtect.Bukkit.RedProtect;
 import br.net.fabiozumbi12.RedProtect.Bukkit.Region;
-import br.net.fabiozumbi12.RedProtect.Bukkit.config.RPLang;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -29,9 +28,9 @@ import java.util.*;
 
 public class Events implements Listener {
 
-    private static List<Player> waitP = new ArrayList<Player>();
-    private static List<BlockFace> faces = Arrays.asList(BlockFace.NORTH, BlockFace.EAST, BlockFace.SOUTH, BlockFace.WEST, BlockFace.UP, BlockFace.DOWN, BlockFace.SELF);
-    private LinkedList<Entity> snows = new LinkedList<Entity>();
+    private static final List<Player> waitP = new ArrayList<Player>();
+    private static final List<BlockFace> faces = Arrays.asList(BlockFace.NORTH, BlockFace.EAST, BlockFace.SOUTH, BlockFace.WEST, BlockFace.UP, BlockFace.DOWN, BlockFace.SELF);
+    private final LinkedList<Entity> snows = new LinkedList<Entity>();
 
     private static void StrikeRain(Player player, Location location) {
         World world = player.getWorld();
@@ -131,17 +130,8 @@ public class Events implements Listener {
             Player player = event.getPlayer();
             Location location = player.getTargetBlock(null, 800).getLocation();
 
-            if (LetItRain.RedProtect) {
-                Region reg1 = RedProtect.get().rm.getTopRegion(location);
-                if (reg1 != null) {
-                    if (reg1.canBuild(player) || reg1.canFire()) {
-                        strikeWait(player, location);
-                    } else {
-                        RPLang.sendMessage(player, "playerlistener.region.cantuse");
-                    }
-                    return;
-                }
-            }
+            // Check hooks
+            if (LetItRain.getHooks().stream().anyMatch(h -> !h.canBuild(location, player))) return;
 
             strikeWait(player, location);
         }
